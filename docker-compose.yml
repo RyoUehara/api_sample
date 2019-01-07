@@ -1,0 +1,31 @@
+version: '3.3'
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - "./nginx/conf.d:/etc/nginx/conf.d"
+    links:
+      - api_server
+
+  api_server:
+    image: node:8.9.4-alpine
+    volumes:
+      - "./api_server:/src"
+    working_dir: /src
+    command: [sh, -c, yarn install && yarn start]
+    ports:
+      - "3000:3000"
+    links:
+      - mysql
+
+  mysql:
+    build: ./mysql
+    volumes:
+      - ./mysql/mysql_data:/var/lib/mysql # データの永続化
+      - ./mysql/sqls:/docker-entrypoint-initdb.d # 初期データ投入
+    ports:
+      - "3306:3306"
+    environment:
+      - "MYSQL_ROOT_PASSWORD=root"
